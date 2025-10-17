@@ -3,7 +3,9 @@
 import { motion } from "framer-motion"
 import { Pacifico } from "next/font/google"
 import Image from "next/image"
+import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
 
 const pacifico = Pacifico({
   subsets: ["latin"],
@@ -78,7 +80,7 @@ function ElegantShape({
 }
 
 export default function HomePage({
-  badge = "Kokonut UI",
+  badge = "Ativvo - Seu Parceiro de Treino",
   title1 = "Supere Limites",
   title2 = "Todos os Dias",
 }: {
@@ -86,6 +88,43 @@ export default function HomePage({
   title1?: string
   title2?: string
 }) {
+  const router = useRouter()
+
+  const handleSignIn = () => {
+    const mainContent = document.querySelector("body")
+    if (mainContent) {
+      mainContent.style.overflow = "hidden"
+    }
+
+    const overlay = document.createElement("div")
+    overlay.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: #030303;
+      z-index: 9999;
+      transition: left 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    `
+    document.body.appendChild(overlay)
+
+    requestAnimationFrame(() => {
+      overlay.style.left = "0"
+    })
+
+    setTimeout(() => {
+      router.push("/sign-in")
+      
+      setTimeout(() => {
+        overlay.remove()
+        if (mainContent) {
+          mainContent.style.overflow = ""
+        }
+      }, 100)
+    }, 600)
+  }
+
   const fadeUpVariants = {
     hidden: { opacity: 0, y: 30 },
     visible: (i: number) => ({
@@ -182,6 +221,17 @@ export default function HomePage({
             <p className="text-base sm:text-lg md:text-xl text-white/40 mb-8 leading-relaxed font-light tracking-wide max-w-xl mx-auto px-4">
               Controle treinos, progresso e hábitos com tecnologia e design de ponta.
             </p>
+          </motion.div>
+
+          <motion.div custom={3} variants={fadeUpVariants} initial="hidden" animate="visible">
+            <Button
+              onClick={handleSignIn}
+              size="lg"
+              className="group relative overflow-hidden bg-gradient-to-r from-indigo-500 to-rose-500 hover:from-indigo-600 hover:to-rose-600 text-white border-0 px-8 py-6 text-lg font-medium transition-all duration-300 hover:scale-105 hover:shadow-[0_0_40px_rgba(99,102,241,0.4)]"
+            >
+              <span className="relative z-10">Entrar</span>
+              <div className="absolute inset-0 bg-gradient-to-r from-rose-500 to-indigo-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            </Button>
           </motion.div>
         </div>
       </div>
