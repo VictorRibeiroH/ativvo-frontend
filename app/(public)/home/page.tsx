@@ -110,18 +110,23 @@ export default function HomePage({
     document.body.appendChild(overlay)
 
     requestAnimationFrame(() => {
-      overlay.style.left = "0"
+      requestAnimationFrame(() => {
+        overlay.style.left = "0"
+      })
     })
 
     setTimeout(() => {
       router.push("/sign-in")
       
       setTimeout(() => {
-        overlay.remove()
-        if (mainContent) {
-          mainContent.style.overflow = ""
-        }
-      }, 100)
+        overlay.style.left = "-100%"
+        setTimeout(() => {
+          overlay.remove()
+          if (mainContent) {
+            mainContent.style.overflow = ""
+          }
+        }, 600)
+      }, 300)
     }, 600)
   }
 

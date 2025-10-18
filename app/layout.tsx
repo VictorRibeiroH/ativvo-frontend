@@ -1,22 +1,23 @@
-import type { Metadata } from 'next'
-import { GeistSans } from 'geist/font/sans'
-import { GeistMono } from 'geist/font/mono'
-import { Analytics } from '@vercel/analytics/next'
-import './globals.css'
+import type { Metadata } from "next";
+import { GeistSans } from "geist/font/sans";
+import { GeistMono } from "geist/font/mono";
+import { Analytics } from "@vercel/analytics/next";
+import "./globals.css";
 
 export const metadata: Metadata = {
-  title: 'Ativvo - Fitness App',
-  description: 'Seu aplicativo fitness personalizado para uma vida mais saudável e ativa.',
-  generator: 'Víctor Ribeiro',
-}
+  title: "Ativvo - Fitness App",
+  description:
+    "Seu aplicativo fitness personalizado para uma vida mais saudável e ativa.",
+  generator: "Víctor Ribeiro",
+};
 
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode
+  children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <style>{`
 html {
@@ -26,10 +27,10 @@ html {
 }
         `}</style>
       </head>
-      <body>
+      <body suppressHydrationWarning>
         {children}
         <Analytics />
       </body>
     </html>
-  )
+  );
 }
