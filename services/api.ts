@@ -112,7 +112,7 @@ export async function getMyProfile(): Promise<User> {
     throw new Error('No authentication token found')
   }
 
-  const response = await fetch(`${API_BASE_URL}/auth/me`, {
+  const response = await fetch(`${API_BASE_URL}/me`, {
     method: 'GET',
     headers: {
       'Authorization': `Bearer ${token}`,
@@ -143,7 +143,7 @@ export async function updateProfile(updates: Partial<User>): Promise<User> {
     throw new Error('No authentication token found')
   }
 
-  const response = await fetch(`${API_BASE_URL}/auth/profile`, {
+  const response = await fetch(`${API_BASE_URL}/profile`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
