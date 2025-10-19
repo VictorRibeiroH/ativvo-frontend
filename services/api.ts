@@ -4,6 +4,27 @@ if (!API_BASE_URL) {
 	throw new Error('NEXT_PUBLIC_API_URL não está definida no .env.local')
 }
 
+// Helper to parse error responses safely. Some server errors may not return JSON
+// (for example a panic/stack trace or plain text). Try to parse JSON, otherwise
+// return the raw text body.
+async function parseErrorResponse(response: Response): Promise<string> {
+  try {
+    const data = await response.json()
+    // If the body is a JSON object with an `error` field, prefer that.
+    if (data && typeof data === 'object' && 'error' in data) {
+      return data.error || JSON.stringify(data)
+    }
+    return JSON.stringify(data)
+  } catch (e) {
+    try {
+      const text = await response.text()
+      return text || response.statusText || 'Unknown error'
+    } catch (_err) {
+      return response.statusText || 'Unknown error'
+    }
+  }
+}
+
 export interface User {
   id: string
   email: string
@@ -167,4 +188,113 @@ export async function updateProfile(updates: Partial<User>): Promise<User> {
   }
 
   return data.user
+}
+
+export interface WeeklyWorkout {
+  id: string
+  day_of_week: number
+  name: string
+  exercises: string[]
+  is_rest: boolean
+  completed: boolean
+  week_start: string
+}
+
+export interface WeeklyStats {
+  completed: number
+  goal: number
+  emoji: string
+}
+
+export async function getWeeklyWorkouts(): Promise<{ workouts: WeeklyWorkout[]; week_start: string }> {
+  const token = getToken()
+  
+  if (!token) {
+    throw new Error('No authentication token found')
+  }
+
+  const response = await fetch(`${API_BASE_URL}/workouts/weekly`, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  })
+
+  if (!response.ok) {
+    const errMsg = await parseErrorResponse(response)
+    throw new Error(errMsg || 'Failed to fetch workouts')
+  }
+
+  return response.json()
+}
+
+export async function saveWeeklyWorkouts(workouts: Array<{
+  day_of_week: number
+  name: string
+  exercises: string[]
+  is_rest: boolean
+}>): Promise<void> {
+  const token = getToken()
+  
+  if (!token) {
+    throw new Error('No authentication token found')
+  }
+
+  const response = await fetch(`${API_BASE_URL}/workouts/weekly`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+    body: JSON.stringify(workouts),
+  })
+
+  if (!response.ok) {
+    const errMsg = await parseErrorResponse(response)
+    throw new Error(errMsg || 'Failed to save workouts')
+  }
+}
+
+export async function toggleWorkoutComplete(workoutId: string): Promise<{ completed: boolean }> {
+  const token = getToken()
+  
+  if (!token) {
+    throw new Error('No authentication token found')
+  }
+
+  const response = await fetch(`${API_BASE_URL}/workouts/weekly/${workoutId}/toggle`, {
+    method: 'PATCH',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  })
+
+  if (!response.ok) {
+    const errMsg = await parseErrorResponse(response)
+    throw new Error(errMsg || 'Failed to toggle workout')
+  }
+
+  return response.json()
+}
+
+export async function getWeeklyStats(): Promise<WeeklyStats> {
+  const token = getToken()
+  
+  if (!token) {
+    throw new Error('No authentication token found')
+  }
+
+  const response = await fetch(`${API_BASE_URL}/workouts/weekly/stats`, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  })
+
+  if (!response.ok) {
+    const errMsg = await parseErrorResponse(response)
+    throw new Error(errMsg || 'Failed to fetch stats')
+  }
+
+  return response.json()
 }
