@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { login } from "@/services/api"
 
 function ElegantShape({
   className,
@@ -78,6 +79,8 @@ function ElegantShape({
 export default function SignInPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState("")
   const router = useRouter()
 
   const fadeUpVariants = {
@@ -93,10 +96,56 @@ export default function SignInPage() {
     }),
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // Lógica de login aqui
-    console.log("Login:", { email, password })
+    setLoading(true)
+    setError("")
+    
+    try {
+      await login(email, password)
+      
+      const mainContent = document.querySelector("body")
+      if (mainContent) {
+        mainContent.style.overflow = "hidden"
+      }
+
+      const overlay = document.createElement("div")
+      overlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: #030303;
+        z-index: 9999;
+        transition: left 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+      `
+      document.body.appendChild(overlay)
+
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          overlay.style.left = "0"
+        })
+      })
+
+      setTimeout(() => {
+        router.push("/dashboard")
+        
+        setTimeout(() => {
+          overlay.style.left = "-100%"
+          setTimeout(() => {
+            overlay.remove()
+            if (mainContent) {
+              mainContent.style.overflow = ""
+            }
+          }, 600)
+        }, 300)
+      }, 600)
+      
+    } catch (err: any) {
+      setError(err.message || "Erro ao fazer login")
+      setLoading(false)
+    }
   }
 
   const handleSignUp = () => {
@@ -196,6 +245,12 @@ export default function SignInPage() {
             </div>
             <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">Bem-vindo de volta</h1>
             <p className="text-white/40 text-sm">Entre com suas credenciais para continuar</p>
+            
+            {error && (
+              <div className="mt-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+                <p className="text-red-400 text-sm">{error}</p>
+              </div>
+            )}
           </motion.div>
 
           <motion.div
@@ -238,9 +293,10 @@ export default function SignInPage() {
 
               <Button
                 type="submit"
-                className="w-full group relative overflow-hidden bg-gradient-to-r from-indigo-500 to-rose-500 hover:from-indigo-600 hover:to-rose-600 text-white border-0 py-6 text-base font-medium transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_0_40px_rgba(99,102,241,0.4)]"
+                disabled={loading}
+                className="w-full group relative overflow-hidden bg-gradient-to-r from-indigo-500 to-rose-500 hover:from-indigo-600 hover:to-rose-600 text-white border-0 py-6 text-base font-medium transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_0_40px_rgba(99,102,241,0.4)] disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <span className="relative z-10">Entrar</span>
+                <span className="relative z-10">{loading ? "Entrando..." : "Entrar"}</span>
                 <div className="absolute inset-0 bg-gradient-to-r from-rose-500 to-indigo-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               </Button>
             </form>

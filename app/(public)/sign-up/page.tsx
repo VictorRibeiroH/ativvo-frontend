@@ -10,6 +10,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { register, updateProfile } from "@/services/api"
+import { toast } from "sonner"
 
 function ElegantShape({
   className,
@@ -79,20 +81,19 @@ function ElegantShape({
 
 export default function SignUpPage() {
   const [step, setStep] = useState(1)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState("")
   const router = useRouter()
 
-  // Step 1
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
 
-  // Step 2
   const [gender, setGender] = useState("")
   const [height, setHeight] = useState("")
   const [weight, setWeight] = useState("")
   const [bodyFat, setBodyFat] = useState("")
 
-  // Step 3
   const [weeklyWorkouts, setWeeklyWorkouts] = useState("")
   const [cardioTime, setCardioTime] = useState("")
   const [goal, setGoal] = useState("")
@@ -127,6 +128,17 @@ export default function SignUpPage() {
 
   const handleStep1Submit = (e: React.FormEvent) => {
     e.preventDefault()
+    setError("")
+    
+    if (!name || !email || !password) {
+      setError("Preencha todos os campos")
+      return
+    }
+    if (password.length < 6) {
+      setError("A senha deve ter no mínimo 6 caracteres")
+      return
+    }
+    
     setStep(2)
   }
 
@@ -135,48 +147,70 @@ export default function SignUpPage() {
     setStep(3)
   }
 
-  const handleStep3Submit = (e: React.FormEvent) => {
+  const handleStep3Submit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // Salvar dados aqui
-    console.log({
-      name, email, password,
-      gender, height, weight, bodyFat,
-      weeklyWorkouts, cardioTime, goal
-    })
+    setLoading(true)
+    setError("")
     
-    // Navegar para dashboard
-    const mainContent = document.querySelector("body")
-    if (mainContent) {
-      mainContent.style.overflow = "hidden"
-    }
-
-    const overlay = document.createElement("div")
-    overlay.style.cssText = `
-      position: fixed;
-      top: 0;
-      left: -100%;
-      width: 100%;
-      height: 100%;
-      background: #030303;
-      z-index: 9999;
-      transition: left 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-    `
-    document.body.appendChild(overlay)
-
-    requestAnimationFrame(() => {
-      overlay.style.left = "0"
-    })
-
-    setTimeout(() => {
-      router.push("/dashboard")
+    try {
+      await register(email, password, name)
       
+      const profileData: any = {}
+      
+      if (gender) profileData.gender = gender
+      if (height) profileData.height = parseFloat(height)
+      if (weight) profileData.weight = parseFloat(weight)
+      if (bodyFat) profileData.body_fat = parseFloat(bodyFat)
+      if (weeklyWorkouts) profileData.weekly_workouts = parseInt(weeklyWorkouts)
+      if (cardioTime) profileData.cardio_time = parseInt(cardioTime)
+      if (goal) profileData.goal = goal
+      
+      if (Object.keys(profileData).length > 0) {
+        await updateProfile(profileData)
+      }
+      
+      const mainContent = document.querySelector("body")
+      if (mainContent) {
+        mainContent.style.overflow = "hidden"
+      }
+
+      const overlay = document.createElement("div")
+      overlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: #030303;
+        z-index: 9999;
+        transition: left 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+      `
+      document.body.appendChild(overlay)
+
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          overlay.style.left = "0"
+        })
+      })
+
       setTimeout(() => {
-        overlay.remove()
-        if (mainContent) {
-          mainContent.style.overflow = ""
-        }
-      }, 100)
-    }, 600)
+        router.push("/dashboard")
+        
+        setTimeout(() => {
+          overlay.style.left = "-100%"
+          setTimeout(() => {
+            overlay.remove()
+            if (mainContent) {
+              mainContent.style.overflow = ""
+            }
+          }, 600)
+        }, 300)
+      }, 600)
+      
+    } catch (err: any) {
+      setError(err.message || "Erro ao criar conta")
+      setLoading(false)
+    }
   }
 
   const handleSignIn = () => {
@@ -302,6 +336,12 @@ export default function SignUpPage() {
             </div>
             <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">{getStepTitle()}</h1>
             <p className="text-white/40 text-sm">{getStepDescription()}</p>
+            
+            {error && (
+              <div className="mt-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+                <p className="text-red-400 text-sm">{error}</p>
+              </div>
+            )}
           </motion.div>
 
           <motion.div
@@ -559,9 +599,10 @@ export default function SignUpPage() {
                     </Button>
                     <Button
                       type="submit"
-                      className="flex-1 group relative overflow-hidden bg-gradient-to-r from-indigo-500 to-rose-500 hover:from-indigo-600 hover:to-rose-600 text-white border-0 py-6 text-base font-medium transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_0_40px_rgba(99,102,241,0.4)]"
+                      disabled={loading}
+                      className="flex-1 group relative overflow-hidden bg-gradient-to-r from-indigo-500 to-rose-500 hover:from-indigo-600 hover:to-rose-600 text-white border-0 py-6 text-base font-medium transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_0_40px_rgba(99,102,241,0.4)] disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      <span className="relative z-10">Finalizar</span>
+                      <span className="relative z-10">{loading ? "Criando conta..." : "Finalizar"}</span>
                       <div className="absolute inset-0 bg-gradient-to-r from-rose-500 to-indigo-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                     </Button>
                   </div>
