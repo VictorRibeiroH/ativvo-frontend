@@ -4,13 +4,9 @@ if (!API_BASE_URL) {
 	throw new Error('NEXT_PUBLIC_API_URL não está definida no .env.local')
 }
 
-// Helper to parse error responses safely. Some server errors may not return JSON
-// (for example a panic/stack trace or plain text). Try to parse JSON, otherwise
-// return the raw text body.
 async function parseErrorResponse(response: Response): Promise<string> {
   try {
     const data = await response.json()
-    // If the body is a JSON object with an `error` field, prefer that.
     if (data && typeof data === 'object' && 'error' in data) {
       return data.error || JSON.stringify(data)
     }
@@ -294,6 +290,113 @@ export async function getWeeklyStats(): Promise<WeeklyStats> {
   if (!response.ok) {
     const errMsg = await parseErrorResponse(response)
     throw new Error(errMsg || 'Failed to fetch stats')
+  }
+
+  return response.json()
+}
+
+// Events API
+export interface Event {
+  id: string
+  user_id: string
+  title: string
+  description: string
+  event_date: string
+  event_time: string
+  created_at: string
+  updated_at: string
+}
+
+export async function createEvent(data: {
+  title: string
+  description: string
+  event_date: string // YYYY-MM-DD
+  event_time: string // HH:mm
+}): Promise<{ message: string; event: Event }> {
+  const token = getToken()
+  
+  if (!token) {
+    throw new Error('No authentication token found')
+  }
+
+  const response = await fetch(`${API_BASE_URL}/events`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+    body: JSON.stringify(data),
+  })
+
+  if (!response.ok) {
+    const errMsg = await parseErrorResponse(response)
+    throw new Error(errMsg || 'Failed to create event')
+  }
+
+  return response.json()
+}
+
+export async function getEvents(): Promise<Event[]> {
+  const token = getToken()
+  
+  if (!token) {
+    throw new Error('No authentication token found')
+  }
+
+  const response = await fetch(`${API_BASE_URL}/events`, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  })
+
+  if (!response.ok) {
+    const errMsg = await parseErrorResponse(response)
+    throw new Error(errMsg || 'Failed to fetch events')
+  }
+
+  return response.json()
+}
+
+export async function getEventsByDate(date: string): Promise<Event[]> {
+  const token = getToken()
+  
+  if (!token) {
+    throw new Error('No authentication token found')
+  }
+
+  const response = await fetch(`${API_BASE_URL}/events/by-date?date=${date}`, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  })
+
+  if (!response.ok) {
+    const errMsg = await parseErrorResponse(response)
+    throw new Error(errMsg || 'Failed to fetch events')
+  }
+
+  return response.json()
+}
+
+export async function deleteEvent(eventId: string): Promise<{ message: string }> {
+  const token = getToken()
+  
+  if (!token) {
+    throw new Error('No authentication token found')
+  }
+
+  const response = await fetch(`${API_BASE_URL}/events/${eventId}`, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  })
+
+  if (!response.ok) {
+    const errMsg = await parseErrorResponse(response)
+    throw new Error(errMsg || 'Failed to delete event')
   }
 
   return response.json()
