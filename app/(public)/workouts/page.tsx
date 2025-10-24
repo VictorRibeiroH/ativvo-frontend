@@ -150,12 +150,6 @@ export default function WorkoutsPage() {
   return (
     <div className="p-4 md:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto space-y-8">
-        <PageTopBase 
-          userName={user?.name || 'Usuário'} 
-          subtitle="Gerencie seus treinos semanais"
-          isDark={isDark}
-        />
-
         <HeroBanner 
           userName={user?.name || 'Usuário'}
         />

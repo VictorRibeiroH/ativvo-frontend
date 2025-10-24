@@ -118,10 +118,12 @@ export function LayoutHeader({
           {/* Theme Toggle */}
           <div className="flex items-center gap-2">
             <Sun className="h-4 w-4 text-white/60" />
-            <Switch 
-              checked={isDark} 
-              onCheckedChange={onToggleTheme}
-              className="data-[state=checked]:bg-indigo-500"
+             <Switch
+              checked={isDark}
+              style={{
+                backgroundColor: isDark ? "#000" : "#000",
+                borderColor: "#828492",
+              }}
             />
             <Moon className="h-4 w-4 text-indigo-300" />
           </div>

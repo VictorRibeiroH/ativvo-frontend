@@ -91,7 +91,7 @@ export function WorkoutCard({
 
   return (
     <Card
-      className="relative overflow-hidden transition-all hover:shadow-xl bg-black"
+      className="relative overflow-hidden transition-all hover:shadow-xl bg-black h-[600px] flex flex-col"
       style={{
         border: "1px solid transparent",
         backgroundImage:
@@ -107,7 +107,7 @@ export function WorkoutCard({
           Hoje
         </div>
       )}
-      <CardHeader className="pb-3">
+      <CardHeader className="pb-3 flex-shrink-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Image
@@ -208,8 +208,8 @@ export function WorkoutCard({
           )}
         </div>
       </CardHeader>
-      <CardContent className="space-y-6 pt-2">
-        <div className="flex items-center gap-3">
+      <CardContent className="space-y-6 pt-2 flex-1 flex flex-col">
+        <div className="flex items-center gap-3 flex-shrink-0">
           <Switch
             id={`rest-${workout.day_of_week}`}
             checked={workout.is_rest}
@@ -221,7 +221,7 @@ export function WorkoutCard({
               })
             }}
             style={{
-              backgroundColor: workout.is_rest ? "#828492" : "#000",
+              backgroundColor: workout.is_rest ? "#000" : "#000",
               borderColor: "#828492",
             }}
           />
@@ -235,7 +235,7 @@ export function WorkoutCard({
 
         {!workout.is_rest && (
           <>
-            <div className="space-y-2">
+            <div className="space-y-2 flex-shrink-0">
               <label className={`text-md font-semibold text-white mt-4 flex items-center gap-2 ${poppins.className}`}>
                 <Image
                   src="/pencil-icon.svg"
@@ -263,8 +263,10 @@ export function WorkoutCard({
               />
             </div>
 
-            <div className="space-y-3">
-              <label className={`text-md font-semibold text-white flex items-center gap-2 ${poppins.className}`}>
+            <div className="space-y-3 flex-1 flex flex-col">
+              <label
+                className={`text-md font-semibold text-white flex items-center gap-2 flex-shrink-0 ${poppins.className}`}
+              >
                 <Image
                   src="/muscle-icon.svg"
                   alt=""
@@ -276,7 +278,7 @@ export function WorkoutCard({
                 />
                 Exercícios realizados
               </label>
-              <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+              <div className="space-y-2 overflow-y-auto pr-1 flex-1 min-h-0">
                 {(workout.exercises || []).map((exercise, index) => (
                   <div key={index} className="flex items-center gap-2 group">
                     <span className={`text-xs font-bold text-gray-500 w-6 ${poppins.className}`}>{index + 1}.</span>
@@ -316,7 +318,7 @@ export function WorkoutCard({
               </div>
               <Button
                 onClick={() => onAddExercise(workout.day_of_week)}
-                className={`w-full bg-[#EE405F] text-white font-semibold ${poppins.className} hover:bg-[#EE405F] active:bg-[#EE405F] focus:bg-[#EE405F]`}
+                className={`w-full bg-[#EE405F] text-white font-semibold flex-shrink-0 ${poppins.className} hover:bg-[#EE405F] active:bg-[#EE405F] focus:bg-[#EE405F]`}
               >
                 Adicionar treino +
               </Button>
