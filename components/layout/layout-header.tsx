@@ -47,7 +47,7 @@ export function LayoutHeader({
     .slice(0, 2) || "U"
 
   return (
-    <header style={{ backgroundColor: '#6266EB1A' }} className="border-b border-white/10 backdrop-blur-sm sticky top-0 z-40">
+    <header style={{ backgroundColor: '#6266EB1A' }} className="lg:hidden border-b border-white/10 backdrop-blur-sm sticky top-0 z-40">
       <div className="flex items-center justify-between p-4">
         <div className="flex items-center gap-4">
           {/* Mobile Menu */}
