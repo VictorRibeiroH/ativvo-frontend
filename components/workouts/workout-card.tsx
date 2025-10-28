@@ -91,35 +91,29 @@ export function WorkoutCard({
 
   return (
     <Card
-      className="relative overflow-hidden transition-all hover:shadow-xl bg-black h-[600px] flex flex-col"
-      style={{
-        border: "1px solid transparent",
-        backgroundImage:
-          "linear-gradient(black, black), linear-gradient(135deg, #6266EB 0%, #8F5BC0 25%, #A356AE 50%, #D84778 75%, #EF405F 100%)",
-        backgroundOrigin: "border-box",
-        backgroundClip: "padding-box, border-box",
-      }}
+      className="relative overflow-hidden transition-all hover:shadow-xl bg-[#0A0A0A] border border-[#1F1F23] rounded-2xl min-w-[280px] w-[280px] md:min-w-[450px] md:w-[450px] h-[500px] md:h-[550px] flex flex-col shrink-0"
     >
       {isToday && (
         <div
-          className={`absolute top-4 right-4 bg-[#71DDB133] text-[#71DDB1] px-3 py-1 rounded-full text-xs font-semibold z-10 ${poppins.className}`}
+          className={`absolute top-4 right-4 bg-[#71DDB1]/20 text-[#71DDB1] px-3 py-1.5 rounded-full text-xs font-semibold z-10 backdrop-blur-sm ${poppins.className}`}
         >
           Hoje
         </div>
       )}
-      <CardHeader className="pb-3 flex-shrink-0">
+      <CardHeader className="pb-2 md:pb-3 flex-shrink-0 pt-3 md:pt-4 px-3 md:px-6">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 md:gap-3">
             <Image
               src="/star-icon.svg"
               alt=""
-              width={28}
-              height={28}
+              width={20}
+              height={20}
+              className="md:w-6 md:h-6"
               onError={(e) => {
                 e.currentTarget.style.display = "none"
               }}
             />
-            <h3 className={`text-xl font-semibold text-white ${poppins.className}`}>{dayName}</h3>
+            <h3 className={`text-base md:text-lg font-semibold text-white ${poppins.className}`}>{dayName}</h3>
           </div>
           {workout.id && !workout.is_rest && (
             <div className="flex items-center gap-2 min-w-[140px] justify-end">
@@ -208,8 +202,8 @@ export function WorkoutCard({
           )}
         </div>
       </CardHeader>
-      <CardContent className="space-y-6 pt-2 flex-1 flex flex-col">
-        <div className="flex items-center gap-3 flex-shrink-0">
+      <CardContent className="space-y-3 md:space-y-4 pt-2 flex-1 flex flex-col px-3 md:px-4">
+        <div className="flex items-center gap-2 flex-shrink-0">
           <Switch
             id={`rest-${workout.day_of_week}`}
             checked={workout.is_rest}
@@ -220,14 +214,11 @@ export function WorkoutCard({
                 exercises: checked ? [] : workout.exercises,
               })
             }}
-            style={{
-              backgroundColor: workout.is_rest ? "#000" : "#000",
-              borderColor: "#828492",
-            }}
+            className="data-[state=checked]:bg-purple-600 scale-90 md:scale-100"
           />
           <label
             htmlFor={`rest-${workout.day_of_week}`}
-            className={`text-base text-[#828492] cursor-pointer ${poppins.className}`}
+            className={`text-xs md:text-sm text-gray-400 cursor-pointer ${poppins.className}`}
           >
             Dia de descanso
           </label>
@@ -235,13 +226,14 @@ export function WorkoutCard({
 
         {!workout.is_rest && (
           <>
-            <div className="space-y-2 flex-shrink-0">
-              <label className={`text-md font-semibold text-white mt-4 flex items-center gap-2 ${poppins.className}`}>
+            <div className="space-y-1.5 md:space-y-2 flex-shrink-0">
+              <label className={`text-xs md:text-sm font-medium text-white flex items-center gap-1.5 md:gap-2 ${poppins.className}`}>
                 <Image
                   src="/pencil-icon.svg"
                   alt=""
-                  width={28}
-                  height={28}
+                  width={16}
+                  height={16}
+                  className="md:w-5 md:h-5"
                   onError={(e) => {
                     e.currentTarget.style.display = "none"
                   }}
@@ -252,65 +244,61 @@ export function WorkoutCard({
                 placeholder="Ex.: Treino A - Peitoral e Tríceps"
                 value={workout.name}
                 onChange={(e) => onUpdateWorkout(workout.day_of_week, { name: e.target.value })}
-                className={`border-none text-white placeholder:text-gray-400 ${poppins.className}`}
+                className={`border-none text-white placeholder:text-gray-500 bg-[#1F1F23] focus-visible:ring-0 focus-visible:ring-offset-0 text-xs md:text-sm py-2 md:py-2.5 ${poppins.className}`}
                 style={{
-                  background: "#3D4046",
                   fontWeight: 400,
-                  fontSize: "14px",
                   lineHeight: "100%",
-                  letterSpacing: "0px",
                 }}
               />
             </div>
 
-            <div className="space-y-3 flex-1 flex flex-col">
+            <div className="space-y-1.5 md:space-y-2 flex-1 flex flex-col">
               <label
-                className={`text-md font-semibold text-white flex items-center gap-2 flex-shrink-0 ${poppins.className}`}
+                className={`text-xs md:text-sm font-medium text-white flex items-center gap-1.5 md:gap-2 flex-shrink-0 ${poppins.className}`}
               >
                 <Image
                   src="/muscle-icon.svg"
                   alt=""
-                  width={28}
-                  height={28}
+                  width={16}
+                  height={16}
+                  className="md:w-5 md:h-5"
                   onError={(e) => {
                     e.currentTarget.style.display = "none"
                   }}
                 />
                 Exercícios realizados
               </label>
-              <div className="space-y-2 overflow-y-auto pr-1 flex-1 min-h-0">
+              <div className="space-y-1.5 md:space-y-2 overflow-y-auto pr-1 flex-1 min-h-0 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent">
                 {(workout.exercises || []).map((exercise, index) => (
-                  <div key={index} className="flex items-center gap-2 group">
-                    <span className={`text-xs font-bold text-gray-500 w-6 ${poppins.className}`}>{index + 1}.</span>
+                  <div key={index} className="flex items-center gap-1.5 md:gap-2 group">
+                    <span className={`text-xs font-semibold text-gray-600 w-3 md:w-4 ${poppins.className}`}>{index + 1}.</span>
                     <Input
                       placeholder="Ex: Supino reto 4x12"
                       value={exercise}
                       onChange={(e) => onUpdateExercise(workout.day_of_week, index, e.target.value)}
-                      className={`flex-1 text-white placeholder:text-gray-400 rounded-lg bg-[#3D4046] px-4 py-2 outline-none ring-0 border-0 focus:border-0 focus:outline-none focus:ring-0 ${poppins.className}`}
+                      className={`flex-1 text-white placeholder:text-gray-500 rounded-lg bg-[#1F1F23] px-2 md:px-3 py-1.5 md:py-2 border-none focus-visible:ring-0 focus-visible:ring-offset-0 text-xs md:text-sm ${poppins.className}`}
                       style={{
                         fontWeight: 400,
-                        fontSize: "14px",
                         lineHeight: "100%",
-                        letterSpacing: "0px",
-                        border: "none",
-                        boxShadow: "none",
                       }}
                     />
                     <Button
                       size="icon"
+                      variant="ghost"
                       onClick={() => onRemoveExercise(workout.day_of_week, index)}
-                      className="opacity-0 group-hover:opacity-100 transition-opacity text-gray-400 hover:text-red-500"
+                      className="h-7 w-7 md:h-8 md:w-8 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity text-gray-500 hover:text-red-400 hover:bg-red-500/10"
                     >
-                      <X className="h-4 w-4" />
+                      <X className="h-3.5 w-3.5 md:h-4 md:w-4" />
                     </Button>
                   </div>
                 ))}
                 {(workout.exercises || []).length === 0 && (
-                  <div className={`text-center py-8 border-2 border-gray-700 rounded-lg ${poppins.className}`}>
-                    <p className={`text-white font-semibold text-lg mb-1 ${poppins.className}`}>
+                  <div className={`text-center py-4 md:py-6 border border-dashed border-gray-700 rounded-lg bg-[#1F1F23]/30 ${poppins.className}`}>
+                    <div className="text-3xl md:text-4xl mb-1.5 md:mb-2">💪</div>
+                    <p className={`text-white font-medium text-xs md:text-sm mb-1 ${poppins.className}`}>
                       Nenhum exercício adicionado
                     </p>
-                    <p className={`text-lg text-gray-400 ${poppins.className}`}>
+                    <p className={`text-[10px] md:text-xs text-gray-500 px-2 ${poppins.className}`}>
                       Clique abaixo no botão "Adicionar treino" para começar.
                     </p>
                   </div>
@@ -318,7 +306,7 @@ export function WorkoutCard({
               </div>
               <Button
                 onClick={() => onAddExercise(workout.day_of_week)}
-                className={`w-full bg-[#EE405F] text-white font-semibold flex-shrink-0 ${poppins.className} hover:bg-[#EE405F] active:bg-[#EE405F] focus:bg-[#EE405F]`}
+                className={`w-full bg-gradient-to-r from-[#EE405F] to-[#D84778] text-white font-medium flex-shrink-0 ${poppins.className} hover:opacity-90 transition-opacity shadow-lg shadow-pink-500/20 text-xs md:text-sm py-2 md:py-2.5`}
               >
                 Adicionar treino +
               </Button>
@@ -328,11 +316,11 @@ export function WorkoutCard({
 
         {workout.is_rest && (
           <div
-            className={`text-center py-12 bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-950/20 dark:to-amber-950/20 rounded-lg ${poppins.className}`}
+            className={`text-center py-12 md:py-16 bg-[#1F1F23] rounded-xl border border-[#2A2A2E] ${poppins.className}`}
           >
-            <div className="text-6xl mb-3">😴</div>
-            <p className="text-lg font-semibold">Dia de Descanso</p>
-            <p className="text-sm text-muted-foreground mt-1">Recupere suas energias!</p>
+            <div className="text-5xl md:text-6xl mb-3 md:mb-4">😴</div>
+            <p className="text-white text-base md:text-lg font-semibold mb-1">Dia de descanso</p>
+            <p className="text-xs md:text-sm text-gray-400 px-4">Recupere suas energias para o próximo treino.</p>
           </div>
         )}
       </CardContent>

@@ -1,12 +1,13 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { getWeeklyWorkouts, saveWeeklyWorkouts, toggleWorkoutComplete, getCurrentUser, type WeeklyWorkout, type User } from '@/services/api'
 import { PageTopBase } from '@/components/layout/page-top-base'
 import { HeroBanner } from '@/components/layout/hero-banner'
 import { WorkoutsHeader } from '@/components/workouts/workouts-header'
 import { WorkoutCard } from '@/components/workouts/workout-card'
-import { Dumbbell } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Dumbbell, ChevronLeft, ChevronRight } from 'lucide-react'
 
 const DAYS_OF_WEEK = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado']
 const DAYS_ORDER = [1, 2, 3, 4, 5, 6, 0]
@@ -32,6 +33,9 @@ export default function WorkoutsPage() {
   const [saving, setSaving] = useState(false)
   const [user, setUser] = useState<User | null>(null)
   const [isDark, setIsDark] = useState(true)
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const [showLeftGradient, setShowLeftGradient] = useState(false)
+  const [showRightGradient, setShowRightGradient] = useState(true)
 
   useEffect(() => {
     const currentUser = getCurrentUser()
@@ -136,6 +140,22 @@ export default function WorkoutsPage() {
     updateWorkout(dayOfWeek, { exercises })
   }
 
+  const handleScroll = () => {
+    if (scrollRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current
+      setShowLeftGradient(scrollLeft > 10)
+      setShowRightGradient(scrollLeft < scrollWidth - clientWidth - 10)
+    }
+  }
+
+  const scroll = (direction: 'left' | 'right') => {
+    if (scrollRef.current) {
+      const scrollAmount = 470
+      const newScrollLeft = scrollRef.current.scrollLeft + (direction === 'left' ? -scrollAmount : scrollAmount)
+      scrollRef.current.scrollTo({ left: newScrollLeft, behavior: 'smooth' })
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -150,6 +170,13 @@ export default function WorkoutsPage() {
   return (
     <div className="p-4 md:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto space-y-8">
+
+        <PageTopBase 
+          userName={user?.name || 'Usuário'} 
+          subtitle="Gerencie seus treinos semanais"
+          isDark={isDark}
+        />
+
         <HeroBanner 
           userName={user?.name || 'Usuário'}
         />
@@ -160,34 +187,71 @@ export default function WorkoutsPage() {
           onSave={handleSave}
         />
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {DAYS_ORDER.map((dayOfWeek) => {
-          const workout = workouts.find(w => w.day_of_week === dayOfWeek) || {
-            day_of_week: dayOfWeek,
-            name: '',
-            exercises: [],
-            is_rest: false,
-            completed: false,
-          }
-          const isToday = dayOfWeek === new Date().getDay()
-          const gradientClass = DAY_COLORS[dayOfWeek as keyof typeof DAY_COLORS]
-          
-          return (
-            <WorkoutCard
-              key={dayOfWeek}
-              dayOfWeek={dayOfWeek}
-              dayName={DAYS_OF_WEEK[workout.day_of_week]}
-              gradientClass={gradientClass}
-              isToday={isToday}
-              workout={workout}
-              onToggleComplete={handleToggleComplete}
-              onUpdateWorkout={updateWorkout}
-              onAddExercise={addExercise}
-              onRemoveExercise={removeExercise}
-              onUpdateExercise={updateExercise}
-            />
-          )
-        })}
+      <div className="relative">
+        {showLeftGradient && (
+          <div className="hidden md:block absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-black via-black/80 to-transparent z-10 pointer-events-none" />
+        )}
+        {showRightGradient && (
+          <div className="hidden md:block absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-black via-black/80 to-transparent z-10 pointer-events-none" />
+        )}
+        
+        {showLeftGradient && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => scroll('left')}
+            className="hidden md:flex absolute -left-6 top-1/2 -translate-y-1/2 z-20 h-12 w-12 bg-gradient-to-r from-[#EE405F] to-[#D84778] hover:opacity-90 text-white shadow-2xl rounded-full transition-all hover:scale-110"
+          >
+            <ChevronLeft className="h-6 w-6" />
+          </Button>
+        )}
+        
+        <div 
+          ref={scrollRef}
+          onScroll={handleScroll}
+          className="flex gap-5 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent px-2"
+          style={{ scrollBehavior: 'smooth' }}
+        >
+          {DAYS_ORDER.map((dayOfWeek) => {
+            const workout = workouts.find(w => w.day_of_week === dayOfWeek) || {
+              day_of_week: dayOfWeek,
+              name: '',
+              exercises: [],
+              is_rest: false,
+              completed: false,
+            }
+            const isToday = dayOfWeek === new Date().getDay()
+            const gradientClass = DAY_COLORS[dayOfWeek as keyof typeof DAY_COLORS]
+            
+            return (
+              <div key={dayOfWeek} className="snap-start">
+                <WorkoutCard
+                  dayOfWeek={dayOfWeek}
+                  dayName={DAYS_OF_WEEK[workout.day_of_week]}
+                  gradientClass={gradientClass}
+                  isToday={isToday}
+                  workout={workout}
+                  onToggleComplete={handleToggleComplete}
+                  onUpdateWorkout={updateWorkout}
+                  onAddExercise={addExercise}
+                  onRemoveExercise={removeExercise}
+                  onUpdateExercise={updateExercise}
+                />
+              </div>
+            )
+          })}
+        </div>
+        
+        {showRightGradient && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => scroll('right')}
+            className="hidden md:flex absolute -right-6 top-1/2 -translate-y-1/2 z-20 h-12 w-12 bg-gradient-to-r from-[#EE405F] to-[#D84778] hover:opacity-90 text-white shadow-2xl rounded-full transition-all hover:scale-110"
+          >
+            <ChevronRight className="h-6 w-6" />
+          </Button>
+        )}
       </div>
       </div>
     </div>

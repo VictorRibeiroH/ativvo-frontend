@@ -93,6 +93,35 @@ const config: Config = {
       },
     },
   },
-  plugins: [require('tailwindcss-animate')],
+  plugins: [
+    require('tailwindcss-animate'),
+    function ({ addUtilities }: any) {
+      addUtilities({
+        '.scrollbar-thin': {
+          'scrollbar-width': 'thin',
+        },
+        '.scrollbar-thumb-gray-700': {
+          'scrollbar-color': '#374151 transparent',
+        },
+        '.scrollbar-track-transparent': {
+          'scrollbar-color': '#374151 transparent',
+        },
+        '.scrollbar-thin::-webkit-scrollbar': {
+          height: '6px',
+          width: '6px',
+        },
+        '.scrollbar-thin::-webkit-scrollbar-track': {
+          background: 'transparent',
+        },
+        '.scrollbar-thin::-webkit-scrollbar-thumb': {
+          background: '#374151',
+          borderRadius: '3px',
+        },
+        '.scrollbar-thin::-webkit-scrollbar-thumb:hover': {
+          background: '#4B5563',
+        },
+      })
+    },
+  ],
 }
 export default config

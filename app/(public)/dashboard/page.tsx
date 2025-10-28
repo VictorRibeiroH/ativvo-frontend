@@ -11,6 +11,7 @@ import { AddEventDialog } from "@/components/dashboard/add-event-dialog"
 import { PageTopBase } from "@/components/layout/page-top-base"
 import { useToast } from "@/hooks/use-toast"
 import { Toaster } from "@/components/ui/toaster"
+import { Progress } from "@/components/ui/progress"
 
 interface DayEvent {
   id: string
@@ -24,6 +25,7 @@ export default function DashboardPage() {
   const { toast } = useToast()
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
+  const [loadingProgress, setLoadingProgress] = useState(0)
   const [isDark, setIsDark] = useState(true)
   const [weeklyStats, setWeeklyStats] = useState<WeeklyStats | null>(null)
   const [selectedDate, setSelectedDate] = useState(new Date())
@@ -39,18 +41,36 @@ export default function DashboardPage() {
   const [deleteProgress, setDeleteProgress] = useState(0)
 
   useEffect(() => {
-    const currentUser = getCurrentUser()
-    if (!currentUser) {
-      router.push("/sign-in")
-      return
-    }
-    setUser(currentUser)
-    loadWeeklyStats()
-    loadEventsForDate(selectedDate)
-    setLoading(false)
+    const initializeDashboard = async () => {
+      setLoadingProgress(10)
+      
+      const currentUser = getCurrentUser()
+      if (!currentUser) {
+        router.push("/sign-in")
+        return
+      }
+      
+      setUser(currentUser)
+      setLoadingProgress(30)
 
-    const savedTheme = localStorage.getItem('ativvo-theme')
-    setIsDark(savedTheme !== 'light')
+      const savedTheme = localStorage.getItem('ativvo-theme')
+      setIsDark(savedTheme !== 'light')
+      
+      setLoadingProgress(50)
+      
+      await Promise.all([
+        loadWeeklyStats().then(() => setLoadingProgress(prev => prev + 25)),
+        loadEventsForDate(selectedDate).then(() => setLoadingProgress(prev => prev + 25))
+      ])
+      
+      setLoadingProgress(100)
+      
+      setTimeout(() => {
+        setLoading(false)
+      }, 300)
+    }
+
+    initializeDashboard()
   }, [router])
 
   useEffect(() => {
@@ -208,9 +228,23 @@ export default function DashboardPage() {
   }
 
   if (loading) {
-    return <div className="flex items-center justify-center h-screen bg-[#030303]">
-      <p className="text-white">Carregando...</p>
-    </div>
+    return (
+      <div className="flex flex-col items-center justify-center h-screen bg-[#030303] space-y-6">
+        <div className="w-64 space-y-4">
+          <div className="flex items-center justify-center">
+            <div className="animate-pulse text-4xl">💪</div>
+          </div>
+          <Progress value={loadingProgress} className="h-2" />
+          <p className="text-white text-center text-sm">
+            {loadingProgress < 30 && "Iniciando..."}
+            {loadingProgress >= 30 && loadingProgress < 50 && "Carregando tema..."}
+            {loadingProgress >= 50 && loadingProgress < 75 && "Carregando estatísticas..."}
+            {loadingProgress >= 75 && loadingProgress < 100 && "Carregando eventos..."}
+            {loadingProgress >= 100 && "Pronto!"}
+          </p>
+        </div>
+      </div>
+    )
   }
 
   return (

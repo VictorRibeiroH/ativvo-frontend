@@ -21,6 +21,30 @@ async function parseErrorResponse(response: Response): Promise<string> {
   }
 }
 
+async function fetchWithRetry<T>(
+  fetchFn: () => Promise<T>,
+  retries = 3,
+  delay = 500
+): Promise<T> {
+  let lastError: any
+  
+  for (let i = 0; i < retries; i++) {
+    try {
+      return await fetchFn()
+    } catch (error) {
+      lastError = error
+      
+      if (i < retries - 1) {
+        console.warn(`🔄 Retry ${i + 1}/${retries - 1} after ${delay}ms...`)
+        await new Promise(resolve => setTimeout(resolve, delay))
+        delay *= 1.5
+      }
+    }
+  }
+  
+  throw lastError
+}
+
 export interface User {
   id: string
   email: string
@@ -277,22 +301,37 @@ export async function getWeeklyStats(): Promise<WeeklyStats> {
   const token = getToken()
   
   if (!token) {
-    throw new Error('No authentication token found')
+    console.warn('⚠️ No token found, skipping stats fetch')
+    return {
+      completed: 0,
+      goal: 0,
+      emoji: '💪'
+    }
   }
 
-  const response = await fetch(`${API_BASE_URL}/workouts/weekly/stats`, {
-    method: 'GET',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-    },
+  return fetchWithRetry(async () => {
+    const response = await fetch(`${API_BASE_URL}/workouts/weekly/stats`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    })
+
+    if (!response.ok) {
+      const errMsg = await parseErrorResponse(response)
+      console.error('❌ Failed to fetch stats:', response.status, errMsg)
+      throw new Error(`Stats fetch failed: ${errMsg}`)
+    }
+
+    return response.json()
+  }, 3, 500).catch(error => {
+    console.error('❌ All retries failed for stats:', error)
+    return {
+      completed: 0,
+      goal: 0,
+      emoji: '💪'
+    }
   })
-
-  if (!response.ok) {
-    const errMsg = await parseErrorResponse(response)
-    throw new Error(errMsg || 'Failed to fetch stats')
-  }
-
-  return response.json()
 }
 
 // Events API
@@ -362,22 +401,29 @@ export async function getEventsByDate(date: string): Promise<Event[]> {
   const token = getToken()
   
   if (!token) {
-    throw new Error('No authentication token found')
+    console.warn('⚠️ No token found, skipping events fetch')
+    return []
   }
 
-  const response = await fetch(`${API_BASE_URL}/events/by-date?date=${date}`, {
-    method: 'GET',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-    },
+  return fetchWithRetry(async () => {
+    const response = await fetch(`${API_BASE_URL}/events/by-date?date=${date}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    })
+
+    if (!response.ok) {
+      const errMsg = await parseErrorResponse(response)
+      console.error('❌ Failed to fetch events:', response.status, errMsg)
+      throw new Error(`Events fetch failed: ${errMsg}`)
+    }
+
+    return response.json()
+  }, 3, 500).catch(error => {
+    console.error('❌ All retries failed for events:', error)
+    return []
   })
-
-  if (!response.ok) {
-    const errMsg = await parseErrorResponse(response)
-    throw new Error(errMsg || 'Failed to fetch events')
-  }
-
-  return response.json()
 }
 
 export async function deleteEvent(eventId: string): Promise<{ message: string }> {

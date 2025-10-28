@@ -25,7 +25,6 @@ export default function PublicLayout({
   const [loading, setLoading] = useState(true)
   const [isDark, setIsDark] = useState(true)
   
-  // Calendar and events state
   const [currentMonth, setCurrentMonth] = useState(new Date())
   const [selectedDate, setSelectedDate] = useState(new Date())
   const [dayEvents, setDayEvents] = useState<DayEvent[]>([])
@@ -33,7 +32,6 @@ export default function PublicLayout({
   const [reminderDialogOpen, setReminderDialogOpen] = useState(false)
   const [loadingEvents, setLoadingEvents] = useState(false)
   
-  // Drag scroll state
   const [isDragging, setIsDragging] = useState(false)
   const [startX, setStartX] = useState(0)
   const [scrollLeft, setScrollLeft] = useState(0)
@@ -43,15 +41,18 @@ export default function PublicLayout({
   const isPublicPage = publicPages.includes(pathname || '')
 
   useEffect(() => {
-    if (!isPublicPage) {
-      const currentUser = getCurrentUser()
-      if (!currentUser) {
-        router.push("/sign-in")
-        return
-      }
-      setUser(currentUser)
-      loadEventsForDate(selectedDate)
+    const currentUser = getCurrentUser()
+    
+    if (!isPublicPage && !currentUser) {
+      router.push("/sign-in")
+      setLoading(false)
+      return
     }
+    
+    if (currentUser) {
+      setUser(currentUser)
+    }
+    
     setLoading(false)
 
     const savedTheme = localStorage.getItem('ativvo-theme')
@@ -59,24 +60,30 @@ export default function PublicLayout({
   }, [router, isPublicPage])
 
   useEffect(() => {
-    if (!loading && !isPublicPage) {
+    if (!loading && user) {
+      loadEventsForDate(selectedDate)
+    }
+  }, [loading, user])
+
+  useEffect(() => {
+    if (user) {
       loadEventsForDate(selectedDate)
       
-      // Scroll para o dia selecionado
-      setTimeout(() => {
-        if (scrollContainerRef.current) {
-          const dayElement = scrollContainerRef.current.querySelector(`[data-day="${selectedDate.getDate()}"]`)
-          if (dayElement) {
-            dayElement.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' })
+      if (!isPublicPage) {
+        setTimeout(() => {
+          if (scrollContainerRef.current) {
+            const dayElement = scrollContainerRef.current.querySelector(`[data-day="${selectedDate.getDate()}"]`)
+            if (dayElement) {
+              dayElement.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' })
+            }
           }
-        }
-      }, 100)
+        }, 100)
+      }
     }
   }, [selectedDate])
 
-  // Scroll inicial para o dia de hoje
   useEffect(() => {
-    if (!loading && scrollContainerRef.current && !isPublicPage) {
+    if (!loading && scrollContainerRef.current && user && !isPublicPage) {
       setTimeout(() => {
         const todayElement = scrollContainerRef.current?.querySelector(`[data-day="${new Date().getDate()}"]`)
         if (todayElement) {
@@ -84,7 +91,7 @@ export default function PublicLayout({
         }
       }, 300)
     }
-  }, [loading])
+  }, [loading, user, isPublicPage])
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -98,12 +105,17 @@ export default function PublicLayout({
   }, [])
 
   const loadEventsForDate = async (date: Date) => {
+    if (!user) {
+      setDayEvents([])
+      return
+    }
+    
     setLoadingEvents(true)
     try {
       const dateStr = date.toISOString().split('T')[0]
       const events = await getEventsByDate(dateStr)
       
-      const dayEvts: DayEvent[] = events.map((event: Event) => ({
+      const dayEvts: DayEvent[] = (events || []).map((event: Event) => ({
         id: event.id,
         title: event.title,
         time: event.event_time,
@@ -112,7 +124,7 @@ export default function PublicLayout({
       
       setDayEvents(dayEvts)
     } catch (error) {
-      console.error('Failed to load events:', error)
+      setDayEvents([])
     } finally {
       setLoadingEvents(false)
     }
