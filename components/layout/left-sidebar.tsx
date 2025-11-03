@@ -1,6 +1,6 @@
 "use client"
 
-import { Activity, Dumbbell, LogOut } from "lucide-react"
+import { Activity, Dumbbell, LogOut, UtensilsCrossed } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Pacifico } from "next/font/google"
 
@@ -69,6 +69,21 @@ export function LeftSidebar({ isDark, pathname, onNavigate, onLogout }: LeftSide
         >
           <Dumbbell className="mr-2 h-4 w-4" />
           Treinos
+        </Button>
+        <Button 
+          variant={pathname === '/diet' ? 'default' : 'ghost'}
+          className={pathname === '/diet'
+            ? 'w-full justify-start bg-gradient-to-r from-indigo-500 to-rose-500 hover:from-indigo-600 hover:to-rose-600 text-white'
+            : `w-full justify-start transition-colors ${
+                isDark 
+                  ? 'text-white/80 hover:text-white hover:bg-white/10' 
+                  : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'
+              }`
+          }
+          onClick={() => onNavigate('/diet')}
+        >
+          <UtensilsCrossed className="mr-2 h-4 w-4" />
+          Montar Dieta
         </Button>
       </nav>
 

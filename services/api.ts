@@ -447,3 +447,448 @@ export async function deleteEvent(eventId: string): Promise<{ message: string }>
 
   return response.json()
 }
+
+// ==================== DIET & FOOD TYPES ====================
+
+export interface Food {
+  id: string
+  name: string
+  calories: number
+  protein: number
+  carbs: number
+  fat: number
+  serving_size: number
+  created_by_id: string
+  created_at: string
+  updated_at: string
+}
+
+export interface CreateFoodInput {
+  name: string
+  calories: number
+  protein: number
+  carbs: number
+  fat: number
+  serving_size?: number
+}
+
+export interface DietPlan {
+  id: string
+  user_id: string
+  age: number
+  gender: string
+  height: number
+  weight: number
+  activity_level: string
+  tmb: number
+  tdee: number
+  goal: string
+  target_calories: number
+  protein_percent: number
+  carbs_percent: number
+  fat_percent: number
+  protein_grams: number
+  carbs_grams: number
+  fat_grams: number
+  is_active: boolean
+  meals?: Meal[]
+  created_at: string
+  updated_at: string
+}
+
+export interface Meal {
+  id: string
+  diet_plan_id: string
+  name: string
+  time: string
+  order: number
+  meal_foods?: MealFood[]
+  created_at: string
+  updated_at: string
+}
+
+export interface MealFood {
+  id: string
+  meal_id: string
+  food_id: string
+  food?: Food
+  quantity: number
+  created_at: string
+  updated_at: string
+}
+
+export interface CreateDietPlanInput {
+  age: number
+  gender: string
+  height: number
+  weight: number
+  activity_level: string
+  goal: string
+  protein_percent: number
+  carbs_percent: number
+  fat_percent: number
+}
+
+export interface DietCalculation {
+  tmb: number
+  tdee: number
+  target_calories: number
+  protein_grams: number
+  carbs_grams: number
+  fat_grams: number
+}
+
+export interface CreateMealInput {
+  name: string
+  time?: string
+  order: number
+}
+
+export interface AddFoodToMealInput {
+  food_id: string
+  quantity: number
+}
+
+// ==================== FOOD API ====================
+
+export async function createFood(input: CreateFoodInput): Promise<Food> {
+  const token = getToken()
+  
+  if (!token) {
+    throw new Error('No authentication token found')
+  }
+
+  const response = await fetch(`${API_BASE_URL}/foods`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+    body: JSON.stringify(input),
+  })
+
+  if (!response.ok) {
+    const errMsg = await parseErrorResponse(response)
+    throw new Error(errMsg || 'Failed to create food')
+  }
+
+  return response.json()
+}
+
+export async function getFoods(search?: string, page = 1, limit = 50): Promise<{ foods: Food[], total: number, page: number, limit: number }> {
+  const token = getToken()
+  
+  if (!token) {
+    throw new Error('No authentication token found')
+  }
+
+  const params = new URLSearchParams({
+    page: page.toString(),
+    limit: limit.toString(),
+  })
+
+  if (search) {
+    params.append('search', search)
+  }
+
+  const response = await fetch(`${API_BASE_URL}/foods?${params.toString()}`, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  })
+
+  if (!response.ok) {
+    const errMsg = await parseErrorResponse(response)
+    throw new Error(errMsg || 'Failed to fetch foods')
+  }
+
+  return response.json()
+}
+
+export async function getFood(id: string): Promise<Food> {
+  const token = getToken()
+  
+  if (!token) {
+    throw new Error('No authentication token found')
+  }
+
+  const response = await fetch(`${API_BASE_URL}/foods/${id}`, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  })
+
+  if (!response.ok) {
+    const errMsg = await parseErrorResponse(response)
+    throw new Error(errMsg || 'Failed to fetch food')
+  }
+
+  return response.json()
+}
+
+// ==================== TACO API ====================
+
+export interface TACOFood {
+  id: number
+  name: string
+  category: string
+  calories: number
+  protein: number
+  carbs: number
+  fat: number
+  fiber: number
+  serving_size: number
+  taco_id: number
+  source: string
+}
+
+export async function searchTACOFoods(query: string): Promise<{ foods: TACOFood[], total: number, source: string }> {
+  const token = getToken()
+  
+  if (!token) {
+    throw new Error('No authentication token found')
+  }
+
+  if (!query || query.trim() === '') {
+    return { foods: [], total: 0, source: 'TACO' }
+  }
+
+  const params = new URLSearchParams({
+    q: query.trim(),
+  })
+
+  const response = await fetch(`${API_BASE_URL}/foods/taco/search?${params.toString()}`, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  })
+
+  if (!response.ok) {
+    const errMsg = await parseErrorResponse(response)
+    throw new Error(errMsg || 'Failed to search TACO foods')
+  }
+
+  return response.json()
+}
+
+export async function importTACOFood(tacoId: number): Promise<Food> {
+  const token = getToken()
+  
+  if (!token) {
+    throw new Error('No authentication token found')
+  }
+
+  const response = await fetch(`${API_BASE_URL}/foods/taco/import`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+    body: JSON.stringify({ taco_id: tacoId }),
+  })
+
+  if (!response.ok) {
+    const errMsg = await parseErrorResponse(response)
+    throw new Error(errMsg || 'Failed to import TACO food')
+  }
+
+  const data = await response.json()
+  return data.food
+}
+
+// ==================== DIET API ====================
+
+export async function calculateDietPlan(input: CreateDietPlanInput): Promise<DietCalculation> {
+  const token = getToken()
+  
+  if (!token) {
+    throw new Error('No authentication token found')
+  }
+
+  const response = await fetch(`${API_BASE_URL}/diet/calculate`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+    body: JSON.stringify(input),
+  })
+
+  if (!response.ok) {
+    const errMsg = await parseErrorResponse(response)
+    throw new Error(errMsg || 'Failed to calculate diet plan')
+  }
+
+  return response.json()
+}
+
+export async function createDietPlan(input: CreateDietPlanInput): Promise<DietPlan> {
+  const token = getToken()
+  
+  if (!token) {
+    throw new Error('No authentication token found')
+  }
+
+  const response = await fetch(`${API_BASE_URL}/diet/plans`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+    body: JSON.stringify(input),
+  })
+
+  if (!response.ok) {
+    const errMsg = await parseErrorResponse(response)
+    throw new Error(errMsg || 'Failed to create diet plan')
+  }
+
+  return response.json()
+}
+
+export async function getActiveDietPlan(): Promise<DietPlan | null> {
+  const token = getToken()
+  
+  if (!token) {
+    return null
+  }
+
+  return fetchWithRetry(async () => {
+    const response = await fetch(`${API_BASE_URL}/diet/plans/active`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    })
+
+    if (!response.ok) {
+      if (response.status === 404) {
+        return null
+      }
+      const errMsg = await parseErrorResponse(response)
+      throw new Error(errMsg || 'Failed to fetch active diet plan')
+    }
+
+    return response.json()
+  }, 3, 500).catch(error => {
+    console.error('❌ Failed to fetch active diet plan:', error)
+    return null
+  })
+}
+
+export async function getDietPlans(): Promise<DietPlan[]> {
+  const token = getToken()
+  
+  if (!token) {
+    throw new Error('No authentication token found')
+  }
+
+  const response = await fetch(`${API_BASE_URL}/diet/plans`, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  })
+
+  if (!response.ok) {
+    const errMsg = await parseErrorResponse(response)
+    throw new Error(errMsg || 'Failed to fetch diet plans')
+  }
+
+  return response.json()
+}
+
+export async function createMeal(dietPlanId: string, input: CreateMealInput): Promise<Meal> {
+  const token = getToken()
+  
+  if (!token) {
+    throw new Error('No authentication token found')
+  }
+
+  const response = await fetch(`${API_BASE_URL}/diet/plans/${dietPlanId}/meals`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+    body: JSON.stringify(input),
+  })
+
+  if (!response.ok) {
+    const errMsg = await parseErrorResponse(response)
+    throw new Error(errMsg || 'Failed to create meal')
+  }
+
+  return response.json()
+}
+
+export async function addFoodToMeal(mealId: string, input: AddFoodToMealInput): Promise<MealFood> {
+  const token = getToken()
+  
+  if (!token) {
+    throw new Error('No authentication token found')
+  }
+
+  const response = await fetch(`${API_BASE_URL}/diet/meals/${mealId}/foods`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+    body: JSON.stringify(input),
+  })
+
+  if (!response.ok) {
+    const errMsg = await parseErrorResponse(response)
+    throw new Error(errMsg || 'Failed to add food to meal')
+  }
+
+  return response.json()
+}
+
+export async function removeFoodFromMeal(mealFoodId: string): Promise<{ message: string }> {
+  const token = getToken()
+  
+  if (!token) {
+    throw new Error('No authentication token found')
+  }
+
+  const response = await fetch(`${API_BASE_URL}/diet/meal-foods/${mealFoodId}`, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  })
+
+  if (!response.ok) {
+    const errMsg = await parseErrorResponse(response)
+    throw new Error(errMsg || 'Failed to remove food from meal')
+  }
+
+  return response.json()
+}
+
+export async function deleteMeal(mealId: string): Promise<{ message: string }> {
+  const token = getToken()
+  
+  if (!token) {
+    throw new Error('No authentication token found')
+  }
+
+  const response = await fetch(`${API_BASE_URL}/diet/meals/${mealId}`, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  })
+
+  if (!response.ok) {
+    const errMsg = await parseErrorResponse(response)
+    throw new Error(errMsg || 'Failed to delete meal')
+  }
+
+  return response.json()
+}
